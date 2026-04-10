@@ -5,27 +5,15 @@
 <title>信息管理系统</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-}
+body { margin: 0; font-family: Arial; }
 
-/* 布局 */
-.container {
-    display: flex;
-    height: 100vh;
-}
+.container { display: flex; height: 100vh; }
 
-/* 左侧菜单 */
 .sidebar {
     width: 220px;
     background: #2c3e50;
     color: white;
     padding: 10px;
-}
-
-.sidebar h2 {
-    text-align: center;
 }
 
 .menu-item {
@@ -37,13 +25,8 @@ body {
     background: #34495e;
 }
 
-/* 主区域 */
-.main {
-    flex: 1;
-    padding: 20px;
-}
+.main { flex: 1; padding: 20px; }
 
-/* 表格 */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -55,15 +38,14 @@ th, td {
     padding: 8px;
 }
 
-th {
-    background: #f4f4f4;
-}
+th { background: #f4f4f4; }
 
-/* 搜索栏 */
-.search-box {
-    margin-bottom: 10px;
-}
+.search-box { margin-bottom: 10px; }
 
+button {
+    margin: 5px;
+    padding: 5px 10px;
+}
 </style>
 </head>
 
@@ -71,37 +53,31 @@ th {
 
 <div class="container">
 
-    <!-- 左侧菜单 -->
     <div class="sidebar">
         <h2>系统菜单</h2>
-        <div class="menu-item" onclick="loadModule('合同台账')">合同台账</div>
         <div class="menu-item" onclick="loadModule('项目方案')">项目方案</div>
-        <div class="menu-item" onclick="loadModule('任务管理')">任务管理</div>
-        <div class="menu-item" onclick="loadModule('采样方案')">采样方案</div>
-        <div class="menu-item" onclick="loadModule('现场数据')">现场数据填报</div>
-        <div class="menu-item" onclick="loadModule('实验室')">实验室分析</div>
-        <div class="menu-item" onclick="loadModule('报告管理')">报告管理</div>
-        <div class="menu-item" onclick="loadModule('试剂')">试剂耗材</div>
     </div>
 
-    <!-- 主内容 -->
     <div class="main">
-        <h2 id="title">欢迎</h2>
+        <h2 id="title">项目方案</h2>
 
         <div class="search-box">
-            <input type="text" id="search" placeholder="输入关键词搜索">
+            <input type="text" id="search" placeholder="搜索名称">
             <button onclick="search()">搜索</button>
         </div>
+
         <button onclick="add()">新增数据</button>
-        <table id="table">
+
+        <table>
             <thead>
                 <tr>
-                    <th>编号</th>
+                    <th>ID</th>
                     <th>名称</th>
                     <th>状态</th>
+                    <th>操作</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="tbody"></tbody>
         </table>
     </div>
 
@@ -111,68 +87,68 @@ th {
 
 let currentData = [];
 
-// 模拟数据
-const dataMap = {
-    "合同台账": [
-        {id:1,name:"合同A",status:"已签约"},
-        {id:2,name:"合同B",status:"审核中"}
-    ],
-    "项目方案": [
-        {id:1,name:"项目1",status:"进行中"},
-        {id:2,name:"项目2",status:"完成"}
-    ],
-    "任务管理": [
-        {id:1,name:"检测任务1",status:"未完成"}
-    ],
-    "采样方案": [
-        {id:1,name:"采样方案A",status:"已派发"}
-    ],
-    "现场数据": [
-        {id:1,name:"现场记录1",status:"已提交"}
-    ],
-    "实验室": [
-        {id:1,name:"分析数据1",status:"完成"}
-    ],
-    "报告管理": [
-        {id:1,name:"报告1",status:"审核中"}
-    ],
-    "试剂": [
-        {id:1,name:"试剂A",status:"库存正常"}
-    ]
-};
-
-async function loadModule(name) {
-    document.getElementById("title").innerText = name;
-
+// 加载数据
+async function loadModule() {
     const res = await fetch("http://localhost:3000/projects");
     const data = await res.json();
-
     currentData = data;
-    renderTable(data);
+    render(data);
 }
 
-function renderTable(data) {
-    const tbody = document.querySelector("#table tbody");
+// 渲染
+function render(data) {
+    const tbody = document.getElementById("tbody");
     tbody.innerHTML = "";
 
     data.forEach(item => {
         tbody.innerHTML += `
-            <tr>
-                <td>${item.id}</td>
-                <td>${item.name}</td>
-                <td>${item.status}</td>
-            </tr>
-        `;
+        <tr>
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.status}</td>
+            <td>
+                <button onclick="del(${item.id})">删除</button>
+            </td>
+        </tr>`;
     });
 }
 
+// 搜索
 function search() {
-    const keyword = document.getElementById("search").value;
-    const filtered = currentData.filter(item =>
-        item.name.includes(keyword)
-    );
-    renderTable(filtered);
+    const key = document.getElementById("search").value;
+    const list = currentData.filter(i => i.name.includes(key));
+    render(list);
 }
+
+// 新增
+async function add() {
+    const name = prompt("名称");
+    const status = prompt("状态");
+
+    if (!name) return;
+
+    await fetch("http://localhost:3000/projects", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ name, status })
+    });
+
+    loadModule();
+}
+
+// 删除
+async function del(id) {
+    if (!confirm("确认删除？")) return;
+
+    await fetch(`http://localhost:3000/projects/${id}`, {
+        method: "DELETE"
+    });
+
+    loadModule();
+}
+
+// 页面加载自动执行
+loadModule();
 
 </script>
 
