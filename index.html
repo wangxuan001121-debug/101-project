@@ -92,7 +92,7 @@ th {
             <input type="text" id="search" placeholder="输入关键词搜索">
             <button onclick="search()">搜索</button>
         </div>
-
+        <button onclick="add()">新增数据</button>
         <table id="table">
             <thead>
                 <tr>
@@ -141,10 +141,14 @@ const dataMap = {
     ]
 };
 
-function loadModule(name) {
+async function loadModule(name) {
     document.getElementById("title").innerText = name;
-    currentData = dataMap[name] || [];
-    renderTable(currentData);
+
+    const res = await fetch("http://localhost:3000/projects");
+    const data = await res.json();
+
+    currentData = data;
+    renderTable(data);
 }
 
 function renderTable(data) {
