@@ -48,7 +48,18 @@ button {
 }
 </style>
 </head>
-
+<!-- 弹窗 -->
+<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; padding:20px; width:300px; margin:100px auto; border-radius:10px;">
+        <h3>新增数据</h3>
+        
+        <input id="name" placeholder="名称" style="width:100%; margin:5px 0;"><br>
+        <input id="status" placeholder="状态" style="width:100%; margin:5px 0;"><br>
+        
+        <button onclick="save()">保存</button>
+        <button onclick="closeModal()">取消</button>
+    </div>
+</div>
 <body>
 
 <div class="container">
@@ -66,7 +77,7 @@ button {
             <button onclick="search()">搜索</button>
         </div>
 
-        <button onclick="add()">新增数据</button>
+        <button onclick="openModal()">新增数据</button>
 
         <table>
             <thead>
@@ -149,7 +160,39 @@ async function del(id) {
 
 // 页面加载自动执行
 loadModule();
+// ===== 弹窗功能 =====
 
+// 打开弹窗
+function openModal() {
+    document.getElementById("modal").style.display = "block";
+}
+
+// 关闭弹窗
+function closeModal() {
+    document.getElementById("modal").style.display = "none";
+}
+
+// 保存数据
+async function save() {
+    const name = document.getElementById("name").value;
+    const status = document.getElementById("status").value;
+
+    if (!name || !status) {
+        alert("请填写完整");
+        return;
+    }
+
+    await fetch("http://localhost:3000/projects", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, status })
+    });
+
+    closeModal();
+    loadModule(); // 刷新表格
+}
 </script>
 
 </body>
