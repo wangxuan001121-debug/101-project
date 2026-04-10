@@ -1,181 +1,175 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>项目管理系统</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      display: flex;
-    }
-    .sidebar {
-      width: 220px;
-      background: #1e293b;
-      color: white;
-      height: 100vh;
-      padding: 20px;
-    }
-    .sidebar h2 {
-      color: #38bdf8;
-    }
-    .menu-item {
-      margin: 15px 0;
-      cursor: pointer;
-    }
-    .menu-item:hover {
-      color: #38bdf8;
-    }
-    .main {
-      flex: 1;
-      padding: 20px;
-      background: #f1f5f9;
-    }
-    .header {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-    }
-    th {
-      background: #e2e8f0;
-    }
-    button {
-      padding: 5px 10px;
-      margin-right: 5px;
-      cursor: pointer;
-    }
-    .btn-add {
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>信息管理系统</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+}
+
+/* 布局 */
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* 左侧菜单 */
+.sidebar {
+    width: 220px;
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+}
+
+.sidebar h2 {
+    text-align: center;
+}
+
+.menu-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #34495e;
+}
+
+/* 主区域 */
+.main {
+    flex: 1;
+    padding: 20px;
+}
+
+/* 表格 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+th {
+    background: #f4f4f4;
+}
+
+/* 搜索栏 */
+.search-box {
+    margin-bottom: 10px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <h2>管理系统</h2>
-  <div class="menu-item" onclick="loadPage('contract')">合同台账</div>
-  <div class="menu-item" onclick="loadPage('project')">项目方案</div>
-  <div class="menu-item" onclick="loadPage('task')">检测任务</div>
-  <div class="menu-item" onclick="loadPage('tech')">技术任务</div>
-  <div class="menu-item" onclick="loadPage('sample')">采样管理</div>
-</div>
+<div class="container">
 
-<div class="main">
-  <div class="header" id="title">合同台账</div>
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+        <h2>系统菜单</h2>
+        <div class="menu-item" onclick="loadModule('合同台账')">合同台账</div>
+        <div class="menu-item" onclick="loadModule('项目方案')">项目方案</div>
+        <div class="menu-item" onclick="loadModule('任务管理')">任务管理</div>
+        <div class="menu-item" onclick="loadModule('采样方案')">采样方案</div>
+        <div class="menu-item" onclick="loadModule('现场数据')">现场数据填报</div>
+        <div class="menu-item" onclick="loadModule('实验室')">实验室分析</div>
+        <div class="menu-item" onclick="loadModule('报告管理')">报告管理</div>
+        <div class="menu-item" onclick="loadModule('试剂')">试剂耗材</div>
+    </div>
 
-  <button class="btn-add" onclick="addItem()">新增</button>
+    <!-- 主内容 -->
+    <div class="main">
+        <h2 id="title">欢迎</h2>
 
-  <table>
-    <thead>
-      <tr id="table-head"></tr>
-    </thead>
-    <tbody id="table-body"></tbody>
-  </table>
+        <div class="search-box">
+            <input type="text" id="search" placeholder="输入关键词搜索">
+            <button onclick="search()">搜索</button>
+        </div>
+
+        <table id="table">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>名称</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
 </div>
 
 <script>
-let currentPage = "contract";
 
-const data = {
-  contract: {
-    title: "合同台账",
-    columns: ["合同编号", "金额", "状态"],
-    rows: [
-      ["HT001", "10000", "已签约"],
-      ["HT002", "20000", "进行中"]
+let currentData = [];
+
+// 模拟数据
+const dataMap = {
+    "合同台账": [
+        {id:1,name:"合同A",status:"已签约"},
+        {id:2,name:"合同B",status:"审核中"}
+    ],
+    "项目方案": [
+        {id:1,name:"项目1",status:"进行中"},
+        {id:2,name:"项目2",status:"完成"}
+    ],
+    "任务管理": [
+        {id:1,name:"检测任务1",status:"未完成"}
+    ],
+    "采样方案": [
+        {id:1,name:"采样方案A",status:"已派发"}
+    ],
+    "现场数据": [
+        {id:1,name:"现场记录1",status:"已提交"}
+    ],
+    "实验室": [
+        {id:1,name:"分析数据1",status:"完成"}
+    ],
+    "报告管理": [
+        {id:1,name:"报告1",status:"审核中"}
+    ],
+    "试剂": [
+        {id:1,name:"试剂A",status:"库存正常"}
     ]
-  },
-  project: {
-    title: "项目方案",
-    columns: ["项目名称", "客户", "地区"],
-    rows: [
-      ["项目A", "客户1", "上海"],
-      ["项目B", "客户2", "北京"]
-    ]
-  },
-  task: {
-    title: "检测任务",
-    columns: ["项目", "状态", "采样人员"],
-    rows: [
-      ["项目A", "进行中", "张三"],
-      ["项目B", "完成", "李四"]
-    ]
-  },
-  tech: {
-    title: "技术任务",
-    columns: ["任务名", "负责人", "状态"],
-    rows: [
-      ["任务1", "王五", "处理中"],
-      ["任务2", "赵六", "完成"]
-    ]
-  },
-  sample: {
-    title: "采样管理",
-    columns: ["项目", "设备", "人员"],
-    rows: [
-      ["项目A", "设备1", "张三"],
-      ["项目B", "设备2", "李四"]
-    ]
-  }
 };
 
-function loadPage(page) {
-  currentPage = page;
-  const pageData = data[page];
+function loadModule(name) {
+    document.getElementById("title").innerText = name;
+    currentData = dataMap[name] || [];
+    renderTable(currentData);
+}
 
-  document.getElementById("title").innerText = pageData.title;
+function renderTable(data) {
+    const tbody = document.querySelector("#table tbody");
+    tbody.innerHTML = "";
 
-  // 表头
-  const head = document.getElementById("table-head");
-  head.innerHTML = "";
-  pageData.columns.forEach(col => {
-    head.innerHTML += `<th>${col}</th>`;
-  });
-  head.innerHTML += "<th>操作</th>";
-
-  // 表体
-  const body = document.getElementById("table-body");
-  body.innerHTML = "";
-  pageData.rows.forEach((row, index) => {
-    let rowHtml = "<tr>";
-    row.forEach(cell => {
-      rowHtml += `<td>${cell}</td>`;
+    data.forEach(item => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.status}</td>
+            </tr>
+        `;
     });
-    rowHtml += `
-      <td>
-        <button onclick="viewItem(${index})">查看</button>
-        <button onclick="deleteItem(${index})">删除</button>
-      </td>
-    `;
-    rowHtml += "</tr>";
-    body.innerHTML += rowHtml;
-  });
 }
 
-function addItem() {
-  alert("这里可以扩展为弹窗表单");
+function search() {
+    const keyword = document.getElementById("search").value;
+    const filtered = currentData.filter(item =>
+        item.name.includes(keyword)
+    );
+    renderTable(filtered);
 }
 
-function deleteItem(index) {
-  data[currentPage].rows.splice(index, 1);
-  loadPage(currentPage);
-}
-
-function viewItem(index) {
-  alert(JSON.stringify(data[currentPage].rows[index]));
-}
-
-// 初始化
-loadPage("contract");
 </script>
 
 </body>
