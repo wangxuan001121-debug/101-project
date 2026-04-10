@@ -2,198 +2,298 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>信息管理系统</title>
-
+<title>检验检测信息管理系统</title>
 <style>
-body { margin: 0; font-family: Arial; }
+    body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; }
+    .container { display: flex; height: 100vh; overflow: hidden; }
+    
+    /* 左侧菜单样式 */
+    .sidebar { width: 240px; background: #2c3e50; color: white; overflow-y: auto; }
+    .sidebar h2 { text-align: center; font-size: 18px; padding: 15px 0; border-bottom: 1px solid #1a252f; margin: 0; }
+    .menu-group { padding-bottom: 10px; border-bottom: 1px solid #34495e; }
+    .menu-title { padding: 12px 15px; font-weight: bold; font-size: 14px; color: #95a5a6; }
+    .menu-item { padding: 12px 15px 12px 30px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+    .menu-item:hover { background: #34495e; color: #42b983; }
+    .menu-item.active { background: #42b983; color: white; font-weight: bold; }
 
-.container { display: flex; height: 100vh; }
+    /* 右侧主区域样式 */
+    .main { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+    .header-actions { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+    .search-box input { padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    button.danger { background: #e74c3c; padding: 5px 10px; font-size: 12px; }
+    button.danger:hover { background: #c0392b; }
 
-.sidebar {
-    width: 220px;
-    background: #2c3e50;
-    color: white;
-    padding: 10px;
-}
+    /* 表格样式 */
+    .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 15px; flex: 1; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    th, td { border-bottom: 1px solid #eee; padding: 12px 10px; text-align: left; font-size: 14px; }
+    th { background: #f8f9fa; font-weight: bold; color: #333; position: sticky; top: 0; }
+    tr:hover { background-color: #f1f4f8; }
 
-.menu-item {
-    padding: 10px;
-    cursor: pointer;
-}
-
-.menu-item:hover {
-    background: #34495e;
-}
-
-.main { flex: 1; padding: 20px; }
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-
-th { background: #f4f4f4; }
-
-.search-box { margin-bottom: 10px; }
-
-button {
-    margin: 5px;
-    padding: 5px 10px;
-}
+    /* 弹窗样式 */
+    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { background: #fff; width: 400px; margin: 80px auto; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin-top: 0; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 13px; color: #666; }
+    .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .modal-actions { text-align: right; margin-top: 20px; }
+    .modal-actions button.cancel { background: #95a5a6; }
 </style>
 </head>
-<!-- 弹窗 -->
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-    <div style="background:#fff; padding:20px; width:300px; margin:100px auto; border-radius:10px;">
-        <h3>新增数据</h3>
-        
-        <input id="name" placeholder="名称" style="width:100%; margin:5px 0;"><br>
-        <input id="status" placeholder="状态" style="width:100%; margin:5px 0;"><br>
-        
-        <button onclick="save()">保存</button>
-        <button onclick="closeModal()">取消</button>
-    </div>
-</div>
 <body>
 
 <div class="container">
-
-    <div class="sidebar">
-        <h2>系统菜单</h2>
-        <div class="menu-item" onclick="loadModule('项目方案')">项目方案</div>
-    </div>
-
-    <div class="main">
-        <h2 id="title">项目方案</h2>
-
-        <div class="search-box">
-            <input type="text" id="search" placeholder="搜索名称">
-            <button onclick="search()">搜索</button>
+    <div class="sidebar" id="sidebar">
+        <h2>检验检测管理系统</h2>
         </div>
 
-        <button onclick="openModal()">新增数据</button>
+    <div class="main">
+        <h2 id="title">请选择模块</h2>
+        
+        <div class="header-actions">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="请输入关键字搜索...">
+                <button onclick="searchData()">搜索</button>
+                <button onclick="resetSearch()" style="background: #95a5a6;">重置</button>
+            </div>
+            <button onclick="openModal()">+ 新增数据</button>
+        </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>名称</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr id="tableHeader">
+                        </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
+<div id="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">新增数据</h3>
+        <div id="dynamicForm">
+            </div>
+        <div class="modal-actions">
+            <button onclick="saveData()">保存</button>
+            <button class="cancel" onclick="closeModal()">取消</button>
+        </div>
+    </div>
 </div>
 
 <script>
+// ================= 配置数据区 (根据图片提取) =================
 
-let currentData = [];
+// 定义系统模块和对应的表格字段
+const sysModules = {
+    "合同台账": ["合同编号", "金额", "状态", "签约人", "部门", "签约时间"],
+    "项目方案管理": ["合同编号", "项目名称", "客户名称", "销售", "地区", "签约时间"],
+    "检测任务": ["项目状态", "项目编号", "项目名称", "检测类型", "采样人员", "交样节点"],
+    "技术其他任务": ["任务序号", "项目状态", "项目编号", "项目名称", "检测类型"],
+    "采样方案与执行管理": ["项目编号", "名称", "地区", "检测类型", "执行情况"],
+    "现场数据填报管理": ["项目编号", "名称", "地区", "检测类型", "填报状态"],
+    "实验室分析管理": ["项目编号", "方案名称", "检测类型", "领样人员", "审核状态"],
+    "报告管理": ["项目编号", "名称", "交样完成时间", "报告完成时间", "状态"],
+    "报告审核": ["项目编号", "检测类别", "样品来源", "完成时间", "状态"],
+    "报告库管理": ["项目编号", "合同编号", "项目名称", "出报告日期", "份数"],
+    "化学药品/试剂台账": ["名称", "型号/规格", "纯度", "批号", "状态", "存放位置", "数量"],
+    "耗材台账": ["名称", "型号/规格", "数量", "存放位置"],
+    "仪器管理": ["仪器名称", "型号/规格", "仪器编号", "校准日期", "生产厂商"],
+    "资质库管理": ["资质类别", "资质名称", "发证机构", "有效期"],
+    "登录日志/操作日志": ["账号", "操作类型", "IP地址", "操作时间", "状态"],
+    "机构管理": ["机构编码", "机构名称", "上级机构", "联系人", "创建时间"],
+    "用户管理": ["账号", "用户名", "所属部门", "角色", "状态"],
+    "角色管理": ["角色编码", "名称", "备注", "创建时间"],
+    "权限管理": ["权限名称", "图标", "标识", "URL"]
+};
 
-// 加载数据
-async function loadModule() {
-    const res = await fetch("http://localhost:3000/projects");
-    const data = await res.json();
-    currentData = data;
-    render(data);
+// 定义左侧菜单树形结构
+const menuStructure = [
+    { title: "业务管理", items: ["合同台账", "项目方案管理", "采样方案与执行管理", "现场数据填报管理", "实验室分析管理"] },
+    { title: "任务管理", items: ["检测任务", "技术其他任务"] },
+    { title: "报告管理", items: ["报告管理", "报告审核", "报告库管理"] },
+    { title: "资产与资源", items: ["化学药品/试剂台账", "耗材台账", "仪器管理", "资质库管理"] },
+    { title: "系统管理", items: ["机构管理", "用户管理", "角色管理", "权限管理", "登录日志/操作日志"] }
+];
+
+// ================= 模拟数据库 =================
+let currentModuleName = "";
+let mockDatabase = {}; // 用于存储各模块的数据：{ "合同台账": [ {...}, {...} ] }
+let displayData = [];  // 当前展示的数据（过滤后）
+
+// 初始化模拟数据
+function initMockData() {
+    for (const mod in sysModules) {
+        mockDatabase[mod] = [];
+        // 给每个模块造1-2条假数据体验
+        let mockItem = { id: Date.now() + Math.floor(Math.random() * 1000) };
+        sysModules[mod].forEach(col => { mockItem[col] = "示例_" + col; });
+        mockDatabase[mod].push(mockItem);
+    }
 }
 
-// 渲染
-function render(data) {
-    const tbody = document.getElementById("tbody");
-    tbody.innerHTML = "";
+// ================= 核心渲染逻辑 =================
 
-    data.forEach(item => {
-        tbody.innerHTML += `
-        <tr>
-            <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td>${item.status}</td>
-            <td>
-                <button onclick="del(${item.id})">删除</button>
-            </td>
-        </tr>`;
+// 1. 渲染左侧菜单
+function renderSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    let html = `<h2>信息管理系统</h2>`;
+    
+    menuStructure.forEach(group => {
+        html += `<div class="menu-group">
+                    <div class="menu-title">${group.title}</div>`;
+        group.items.forEach(item => {
+            html += `<div class="menu-item" onclick="switchModule('${item}')" id="menu-${item}">${item}</div>`;
+        });
+        html += `</div>`;
     });
+    sidebar.innerHTML = html;
 }
+
+// 2. 切换模块
+function switchModule(moduleName) {
+    // 菜单高亮切换
+    if(currentModuleName) {
+        const oldMenu = document.getElementById(`menu-${currentModuleName}`);
+        if(oldMenu) oldMenu.classList.remove('active');
+    }
+    document.getElementById(`menu-${moduleName}`).classList.add('active');
+    
+    currentModuleName = moduleName;
+    document.getElementById("title").innerText = moduleName;
+    document.getElementById("searchInput").value = "";
+    document.getElementById("searchInput").placeholder = `按 ${sysModules[moduleName][0]} 搜索...`;
+
+    renderTable();
+}
+
+// 3. 渲染表格
+function renderTable() {
+    const columns = sysModules[currentModuleName];
+    const thead = document.getElementById("tableHeader");
+    const tbody = document.getElementById("tableBody");
+    
+    // 渲染表头
+    let thHtml = `<th>序号</th>`;
+    columns.forEach(col => { thHtml += `<th>${col}</th>`; });
+    thHtml += `<th>操作</th>`;
+    thead.innerHTML = thHtml;
+
+    // 渲染数据
+    let tbHtml = "";
+    displayData = mockDatabase[currentModuleName] || [];
+    
+    if (displayData.length === 0) {
+        tbHtml = `<tr><td colspan="${columns.length + 2}" style="text-align:center;color:#999;">暂无数据</td></tr>`;
+    } else {
+        displayData.forEach((row, index) => {
+            tbHtml += `<tr><td>${index + 1}</td>`;
+            columns.forEach(col => { tbHtml += `<td>${row[col] || '-'}</td>`; });
+            tbHtml += `<td><button class="danger" onclick="deleteData(${row.id})">删除</button></td></tr>`;
+        });
+    }
+    tbody.innerHTML = tbHtml;
+}
+
+// ================= 业务操作逻辑 =================
 
 // 搜索
-function search() {
-    const key = document.getElementById("search").value;
-    const list = currentData.filter(i => i.name.includes(key));
-    render(list);
-}
-
-// 新增
-async function add() {
-    const name = prompt("名称");
-    const status = prompt("状态");
-
-    if (!name) return;
-
-    await fetch("http://localhost:3000/projects", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ name, status })
+function searchData() {
+    const keyword = document.getElementById("searchInput").value.trim();
+    const columns = sysModules[currentModuleName];
+    const primaryKey = columns[0]; // 默认按第一个字段搜索（如合同编号/项目编号）
+    
+    const allData = mockDatabase[currentModuleName];
+    if(!keyword) {
+        displayData = allData;
+    } else {
+        displayData = allData.filter(item => String(item[primaryKey]).includes(keyword));
+    }
+    
+    // 重新仅渲染tbody
+    const tbody = document.getElementById("tableBody");
+    let tbHtml = "";
+    displayData.forEach((row, index) => {
+        tbHtml += `<tr><td>${index + 1}</td>`;
+        columns.forEach(col => { tbHtml += `<td>${row[col] || '-'}</td>`; });
+        tbHtml += `<td><button class="danger" onclick="deleteData(${row.id})">删除</button></td></tr>`;
     });
-
-    loadModule();
+    tbody.innerHTML = tbHtml;
 }
 
-// 删除
-async function del(id) {
-    if (!confirm("确认删除？")) return;
-
-    await fetch(`http://localhost:3000/projects/${id}`, {
-        method: "DELETE"
-    });
-
-    loadModule();
+// 重置搜索
+function resetSearch() {
+    document.getElementById("searchInput").value = "";
+    renderTable();
 }
 
-// 页面加载自动执行
-loadModule();
-// ===== 弹窗功能 =====
+// 删除数据
+function deleteData(id) {
+    if (!confirm("确定要删除这条记录吗？")) return;
+    mockDatabase[currentModuleName] = mockDatabase[currentModuleName].filter(item => item.id !== id);
+    renderTable(); // 重新渲染
+}
 
-// 打开弹窗
+// ================= 弹窗逻辑 =================
+
 function openModal() {
+    if(!currentModuleName) { alert("请先在左侧选择一个模块！"); return; }
+    
+    document.getElementById("modalTitle").innerText = `新增 - ${currentModuleName}`;
+    const formDiv = document.getElementById("dynamicForm");
+    const columns = sysModules[currentModuleName];
+    
+    // 根据当前模块的字段动态生成输入框
+    let formHtml = "";
+    columns.forEach(col => {
+        formHtml += `
+            <div class="form-group">
+                <label>${col}</label>
+                <input type="text" id="input_${col}" placeholder="请输入${col}">
+            </div>
+        `;
+    });
+    formDiv.innerHTML = formHtml;
     document.getElementById("modal").style.display = "block";
 }
 
-// 关闭弹窗
 function closeModal() {
     document.getElementById("modal").style.display = "none";
 }
 
-// 保存数据
-async function save() {
-    const name = document.getElementById("name").value;
-    const status = document.getElementById("status").value;
-
-    if (!name || !status) {
-        alert("请填写完整");
-        return;
+function saveData() {
+    const columns = sysModules[currentModuleName];
+    let newData = { id: Date.now() }; // 生成唯一ID
+    
+    // 收集表单数据
+    for(let col of columns) {
+        const val = document.getElementById(`input_${col}`).value;
+        if(!val) {
+            alert(`请填写 ${col}`);
+            return;
+        }
+        newData[col] = val;
     }
-
-    await fetch("http://localhost:3000/projects", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, status })
-    });
-
+    
+    // 保存到模拟数据库
+    mockDatabase[currentModuleName].push(newData);
     closeModal();
-    loadModule(); // 刷新表格
+    renderTable();
 }
-</script>
 
+// ================= 系统初始化 =================
+window.onload = () => {
+    initMockData();
+    renderSidebar();
+    switchModule("合同台账"); // 默认打开第一个模块
+};
+
+</script>
 </body>
 </html>
