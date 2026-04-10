@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>项目管理系统</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      display: flex;
+    }
+    .sidebar {
+      width: 220px;
+      background: #1e293b;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+    }
+    .sidebar h2 {
+      color: #38bdf8;
+    }
+    .menu-item {
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    .menu-item:hover {
+      color: #38bdf8;
+    }
+    .main {
+      flex: 1;
+      padding: 20px;
+      background: #f1f5f9;
+    }
+    .header {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: #e2e8f0;
+    }
+    button {
+      padding: 5px 10px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    .btn-add {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <h2>管理系统</h2>
+  <div class="menu-item" onclick="loadPage('contract')">合同台账</div>
+  <div class="menu-item" onclick="loadPage('project')">项目方案</div>
+  <div class="menu-item" onclick="loadPage('task')">检测任务</div>
+  <div class="menu-item" onclick="loadPage('tech')">技术任务</div>
+  <div class="menu-item" onclick="loadPage('sample')">采样管理</div>
+</div>
+
+<div class="main">
+  <div class="header" id="title">合同台账</div>
+
+  <button class="btn-add" onclick="addItem()">新增</button>
+
+  <table>
+    <thead>
+      <tr id="table-head"></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<script>
+let currentPage = "contract";
+
+const data = {
+  contract: {
+    title: "合同台账",
+    columns: ["合同编号", "金额", "状态"],
+    rows: [
+      ["HT001", "10000", "已签约"],
+      ["HT002", "20000", "进行中"]
+    ]
+  },
+  project: {
+    title: "项目方案",
+    columns: ["项目名称", "客户", "地区"],
+    rows: [
+      ["项目A", "客户1", "上海"],
+      ["项目B", "客户2", "北京"]
+    ]
+  },
+  task: {
+    title: "检测任务",
+    columns: ["项目", "状态", "采样人员"],
+    rows: [
+      ["项目A", "进行中", "张三"],
+      ["项目B", "完成", "李四"]
+    ]
+  },
+  tech: {
+    title: "技术任务",
+    columns: ["任务名", "负责人", "状态"],
+    rows: [
+      ["任务1", "王五", "处理中"],
+      ["任务2", "赵六", "完成"]
+    ]
+  },
+  sample: {
+    title: "采样管理",
+    columns: ["项目", "设备", "人员"],
+    rows: [
+      ["项目A", "设备1", "张三"],
+      ["项目B", "设备2", "李四"]
+    ]
+  }
+};
+
+function loadPage(page) {
+  currentPage = page;
+  const pageData = data[page];
+
+  document.getElementById("title").innerText = pageData.title;
+
+  // 表头
+  const head = document.getElementById("table-head");
+  head.innerHTML = "";
+  pageData.columns.forEach(col => {
+    head.innerHTML += `<th>${col}</th>`;
+  });
+  head.innerHTML += "<th>操作</th>";
+
+  // 表体
+  const body = document.getElementById("table-body");
+  body.innerHTML = "";
+  pageData.rows.forEach((row, index) => {
+    let rowHtml = "<tr>";
+    row.forEach(cell => {
+      rowHtml += `<td>${cell}</td>`;
+    });
+    rowHtml += `
+      <td>
+        <button onclick="viewItem(${index})">查看</button>
+        <button onclick="deleteItem(${index})">删除</button>
+      </td>
+    `;
+    rowHtml += "</tr>";
+    body.innerHTML += rowHtml;
+  });
+}
+
+function addItem() {
+  alert("这里可以扩展为弹窗表单");
+}
+
+function deleteItem(index) {
+  data[currentPage].rows.splice(index, 1);
+  loadPage(currentPage);
+}
+
+function viewItem(index) {
+  alert(JSON.stringify(data[currentPage].rows[index]));
+}
+
+// 初始化
+loadPage("contract");
+</script>
+
+</body>
+</html>
